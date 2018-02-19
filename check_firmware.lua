@@ -17,8 +17,6 @@ local extension = "no_ext"
 local remaining, used, total=file.fsinfo()
 local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
 
-
---inspect = require("inspect")
 http.get("http://192.168.1.2/objects/?script=esp_ota_update&sketch_req=NewSketchChecking",
               "x-esp8266-sta-mac: "..wifi.sta.getmac().."\r\n"..
               "x-esp8266-sta-ip: "..wifi.sta.getip().."\r\n"..
@@ -61,7 +59,6 @@ else
     print("Используемый тип файла прошивки - неизвестен = "..headers["x-esp8266-extension"])
     extension = "unknown"
 end
---print(code, data, inspect(headers))
                 if (code < 0) then
                     print("HTTP request failed")
                 else
@@ -155,7 +152,6 @@ collectgarbage()
     used = nil
     flashid = nil
     chipid = nil
-    tmr.delay(1000000)
     collectgarbage()
                
 end)
