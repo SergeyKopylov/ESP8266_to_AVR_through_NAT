@@ -1,3 +1,7 @@
+-- ESP8266-HTTP Library
+-- Written 2014 by Tobias Mädel (t.maedel@alfeld.de) - https://github.com/Manawyrm/ESP8266-HTTP
+-- Licensed unter MIT
+
 local moduleName = ... 
 local M = {}
 _G[moduleName] = M
@@ -46,8 +50,6 @@ print("Длина строки = ",string.len (buffer),"\tскачано: ",file
 		conn = nil
         print("размер файла = ",file.seek("end"))
 		file.close()
---		callback = "ok"
---        callback("ok")
         print ("Downloading is complete. Start checking MD5:")
 --==============================================================
 -- Проверяем, что скачанный файл и файл на сервере имеют одинаковый хэш:
@@ -119,7 +121,6 @@ majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = 
 	end)
 	conn:connect(port,host)
 
---    file.close()
 end
     remaining = nil
     used = nil
