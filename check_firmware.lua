@@ -45,7 +45,7 @@ http.get("http://192.168.1.2/objects/?script=esp_ota_update&sketch_req=NewSketch
                     print("x-esp8266-extension = ", headers["x-esp8266-extension"])
                     print("content-length = ", headers["content-length"])
 if (headers["x-esp8266-extension"] == nil) then
-    print("Нет связи с сервером")
+    print("Нет новой прошивки или отсутствует связь с сервером")
     extension = "no_sketch"
 elseif (headers["x-esp8266-extension"] == "hex") then
     print("Используемый тип файла прошивки = "..headers["x-esp8266-extension"])
