@@ -1,4 +1,6 @@
-function Program_Flash (sketch)
+function Program_Flash (ext)
+local back --callback для сообщений debug на сервер
+
     tmr.wdclr()
     
     spi.setup(1, spi.MASTER, spi.CPOL_LOW, spi.CPHA_LOW, spi.DATABITS_8,320,spi.FULLDUPLEX)
@@ -7,24 +9,20 @@ function Program_Flash (sketch)
     collectgarbage()
     
     ProgrammingEnable ()
-    --tmr.delay(1000)
+
     if InstrProgrammingEnable () == 1 then
     
         InstrFlashErase()
         tmr.delay(1000)
 
-        local str = ""
-        str = string.sub(sketch,-3)
-        if (str == "hex") then
+        if (ext == "hex") then
             print("Прошивка HEX-файла")
-            Programming_hex (sketch)
---[[        elseif (str == "bin") then
+            Programming_hex ("sketch_download")
+        elseif (ext == "bin") then
             print("Прошивка BIN-файла")
-            Programming_bin (sketch)]]
+            Programming_bin ("sketch_download")
         else
---            print("Неизвестный формат файла прошивки")
-            print("Прошивка BIN-файла")
-            Programming_bin (sketch)
+            print("Неизвестное расширение прошивки!")
         end
     
     else

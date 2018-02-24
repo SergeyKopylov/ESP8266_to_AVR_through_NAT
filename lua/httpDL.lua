@@ -10,6 +10,9 @@ local buffer = nil
 
 function M.download(host, port, url, path, md5, callback)
 
+local remaining, used, total=file.fsinfo()
+local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
+
 	file.remove(path);
 	file.open(path, "w+")
 
@@ -56,7 +59,6 @@ print("Длина строки = ",string.len (buffer),"\tскачано: ",file
 http.get("http://192.168.1.2/objects/?script=esp_ota_update&sketch_req=AfterChecking",
               "x-esp8266-sta-mac: "..wifi.sta.getmac().."\r\n"..
               "x-esp8266-sta-ip: "..wifi.sta.getip().."\r\n"..
-              "x-esp8266-ap-mac: "..wifi.ap.getmac().."\r\n"..
               "x-esp8266-free-space: "..node.heap().."\r\n"..
               "x-esp8266-chip-size: "..node.flashsize().."\r\n"..
               "x-esp8266-chip-id: "..chipid.."\r\n"..
@@ -85,6 +87,7 @@ http.get("http://192.168.1.2/objects/?script=esp_ota_update&sketch_req=AfterChec
 
 end)
         conn = nil
+--        callback("ok")
         -- запускаем встроенный сборщик мусора (освобождает всю занятую до этого нашими действиями RAM память)
         collectgarbage()
 --==============================================================
@@ -94,13 +97,9 @@ end)
 --********************************************************************************************	
 	conn:on("connection", function(conn)
 
-remaining, used, total=file.fsinfo()
-majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
-
 		conn:send("GET /"..url.." HTTP/1.0\r\n"..
               "x-esp8266-sta-mac: "..wifi.sta.getmac().."\r\n"..
               "x-esp8266-sta-ip: "..wifi.sta.getip().."\r\n"..
-              "x-esp8266-ap-mac: "..wifi.ap.getmac().."\r\n"..
               "x-esp8266-free-space: "..node.heap().."\r\n"..
               "x-esp8266-chip-size: "..node.flashsize().."\r\n"..
               "x-esp8266-chip-id: "..chipid.."\r\n"..
@@ -111,16 +110,17 @@ majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = 
               "x-esp8266-fs-remaining: "..remaining.."\r\n"..
               "x-esp8266-sketch-md5: "..md5.."\r\n"..
               "x-esp8266-extension: no_ext\r\n"..
-			        "Connection: close\r\n"..
-			        "Accept-Charset: utf-8\r\n"..
-			        "Accept-Encoding: \r\n"..
+			  "Connection: close\r\n"..
+			  "Accept-Charset: utf-8\r\n"..
+			  "Accept-Encoding: \r\n"..
               "User-Agent: ESP8266-http-Update\r\n".. 
               "Authorization: Basic YWRtaW46cGFzc3dvcmQ=\r\n"..
-			        "Accept: */*\r\n\r\n")
+			  "Accept: */*\r\n\r\n")
 
 	end)
 	conn:connect(port,host)
 
+--    file.close()
 end
     remaining = nil
     used = nil
