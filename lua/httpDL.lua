@@ -1,5 +1,5 @@
 -- ESP8266-HTTP Library
--- Written 2014 by Tobias Mädel (t.maedel@alfeld.de) - https://github.com/Manawyrm/ESP8266-HTTP
+-- Written 2014 by Tobias Madel (t.maedel@alfeld.de) - https://github.com/Manawyrm/ESP8266-HTTP
 -- Licensed unter MIT
 
 local moduleName = ... 
