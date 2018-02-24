@@ -2,8 +2,10 @@
 -- sending a GET request and get the return value
 --Feed the system watchdog.
 --In general, if you ever need to use this function, you are doing it wrong :) - https://nodemcu.readthedocs.io/en/dev/en/modules/tmr/#tmrwdclr
-tmr.wdclr()
 
+local remaining, used, total=file.fsinfo()
+local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
+local md5 = ""
 local sketch = "sketch_download"   --Имя файла на ESP8266, куда будет ложиться прошивка (скетч)
 local extension = "no_ext"
 
@@ -14,15 +16,9 @@ local extension = "no_ext"
         md5 = "NoSketchFilePresent"
     end
 
-local remaining, used, total=file.fsinfo()
-local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
-
-
---inspect = require("inspect")
 http.get("http://192.168.1.2/objects/?script=esp_ota_update&sketch_req=NewSketchChecking",
               "x-esp8266-sta-mac: "..wifi.sta.getmac().."\r\n"..
               "x-esp8266-sta-ip: "..wifi.sta.getip().."\r\n"..
-              "x-esp8266-ap-mac: "..wifi.ap.getmac().."\r\n"..
               "x-esp8266-free-space: "..node.heap().."\r\n"..
               "x-esp8266-chip-size: "..node.flashsize().."\r\n"..
               "x-esp8266-chip-id: "..chipid.."\r\n"..
@@ -42,39 +38,49 @@ http.get("http://192.168.1.2/objects/?script=esp_ota_update&sketch_req=NewSketch
               "Authorization: Basic YWRtaW46cGFzc3dvcmQ=\r\n"..
               "Accept: */*\r\n\r\n",
               function(code, data, headers)
+                if ((code ~= nil) and (data ~= nil)) then
                     print("code = "..code.."\tdata = "..data)
                     print("x-file-name = ", headers["x-file-name"])
                     print("x-esp8266-extension = ", headers["x-esp8266-extension"])
                     print("content-length = ", headers["content-length"])
-if (headers["x-esp8266-extension"] == nil) then
-    print("Нет связи с сервером")
-    extension = "no_sketch"
-elseif (headers["x-esp8266-extension"] == "hex") then
-    print("Используемый тип файла прошивки = "..headers["x-esp8266-extension"])
-    extension = "hex"
---    sketch = "sketch.hex"
-elseif (headers["x-esp8266-extension"] == "bin") then
-    print("Используемый тип файла прошивки = "..headers["x-esp8266-extension"])
-    extension = "bin"
---    sketch = "sketch.bin"
+                else
+                    print("Ошибка получения данных 'data' и статуса соединения 'code'")
+                    return
+                end
+
+if (headers ~= nil) then
+    if (headers["x-esp8266-extension"] == nil) then
+        print("Нет новой прошивки или отсутствует связь с сервером")
+        extension = "no_sketch"
+    elseif (headers["x-esp8266-extension"] == "hex") then
+        print("Используемый тип файла прошивки = "..headers["x-esp8266-extension"])
+        extension = "hex"
+    --    sketch = "sketch.hex"
+    elseif (headers["x-esp8266-extension"] == "bin") then
+        print("Используемый тип файла прошивки = "..headers["x-esp8266-extension"])
+        extension = "bin"
+    --    sketch = "sketch.bin"
+    else
+        print("Используемый тип файла прошивки - неизвестен = "..headers["x-esp8266-extension"])
+        extension = "unknown"
+    end
 else
-    print("Используемый тип файла прошивки - неизвестен = "..headers["x-esp8266-extension"])
-    extension = "unknown"
+    print("Ошибка: headers = nil !!!")
 end
---print(code, data, inspect(headers))
+
                 if (code < 0) then
                     print("HTTP request failed")
                 else
                     if (data == "OK") then
 --**************************************************************
 -- Download a file
-
-tmr.wdclr()
-
-httpDL = require("httpDL")
 collectgarbage()
 
-httpDL.download("192.168.1.1", "80", "objects/?script=esp_ota_update", sketch, md5, function(ret_val)
+httpDL = require("httpDL")
+
+httpDL.download("94.190.12.27", "80", "objects/?script=esp_ota_update", sketch, md5, function(ret_val)
+
+
     -- Finished downloading
 remaining = nil
 flashspeed = nil
@@ -87,6 +93,7 @@ md5 = nil
 used = nil
 flashid = nil
 chipid = nil
+payloadFound = nil
 
 package.loaded["httpDL"]=nil
 httpDL = nil
@@ -100,28 +107,18 @@ elseif (ret_val == "ok") then
         print("extension = bin")
         -- Начинаем прошивку
         require("Program_Flash")
-        --Program_Flash ("sketch.bin")
-        Program_Flash ("sketch_download")
+        Program_Flash ("bin")
         package.loaded["Program_Flash"]=nil
         Program_Flash = nil
+        collectgarbage()
     elseif (extension == "hex") then
         print("extension = hex")
-        -- Копируем файл прошивки в sketch.hex
-        local source = file.open(sketch, "r")
-        local destin = file.open("sketch.hex", "w")
-        local size = source:seek("end")
-        source:seek("set",0)
-        destin:seek("set",0)
-        destin:write(source:read(size))
-        destin:close()
-        source:close()
-        destin = nil
-        source = nil
         -- Начинаем прошивку
         require("Program_Flash")
-        Program_Flash ("sketch.hex")
+        Program_Flash ("hex")
         package.loaded["Program_Flash"]=nil
         Program_Flash = nil
+        collectgarbage()
     elseif (extension == "no_sketch") then
         print("extension = no_sketch")
     elseif (extension == "unknown") then
@@ -134,7 +131,6 @@ elseif (ret_val == "failed") then
 else
     print("Странное значение ret_val... Что-то пошло не так...")
 end
-
 
 end)
 
@@ -157,5 +153,5 @@ collectgarbage()
     chipid = nil
     tmr.delay(1000000)
     collectgarbage()
-               
+           
 end)
