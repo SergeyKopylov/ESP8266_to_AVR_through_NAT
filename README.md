@@ -1,4 +1,4 @@
-# ESP8266_to_AVR_trough_NAT
+# ESP8266_to_AVR_through_NAT
 --English text below--
 Удалённая прошивка микроконтроллеров AVR посредством ESP8266, расположенных за NAT-ом мобильной сети
 
